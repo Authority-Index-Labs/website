@@ -127,6 +127,31 @@
       transition: background-color 0.3s ease, box-shadow 0.3s ease;
     }
 
+    /* Nav logo halo — applied only when nav is in transparent (over-hero) state.
+       Removed cleanly once nav.bg-white is toggled on scroll. */
+    #site-nav .nav-logo {
+      transition: filter 0.3s ease;
+    }
+    #site-nav.bg-transparent .nav-logo {
+      filter:
+        drop-shadow(0 0 6px rgba(255, 255, 255, 0.45))
+        drop-shadow(0 0 14px rgba(255, 255, 255, 0.18));
+    }
+
+    /* Hero logo halo — always on (lives over the navy-overlaid Nashville bg). */
+    .hero-logo {
+      filter:
+        drop-shadow(0 0 8px rgba(255, 255, 255, 0.5))
+        drop-shadow(0 0 22px rgba(255, 255, 255, 0.22));
+    }
+
+    /* Footer logo halo — sits on the navy footer surface. */
+    .footer-logo {
+      filter:
+        drop-shadow(0 0 4px rgba(255, 255, 255, 0.55))
+        drop-shadow(0 0 10px rgba(255, 255, 255, 0.22));
+    }
+
     /* Focus ring using gold */
     :focus-visible {
       outline: 2px solid #c8a44b;
@@ -162,7 +187,7 @@
           <img
             src="/assets/images/ail-logo.png"
             alt="Authority Index Labs"
-            class="h-10 w-auto"
+            class="nav-logo h-10 w-auto"
             onerror="this.style.display='none'; this.nextElementSibling.style.display='block'"
           />
           <span class="hidden text-white font-semibold text-lg nav-logo-text" style="display:none;">Authority Index Labs</span>
@@ -231,7 +256,7 @@
         <img
           src="/assets/images/ail-logo.png"
           alt="Authority Index Labs"
-          class="w-64 md:w-[436px] h-auto mb-2"
+          class="hero-logo w-64 md:w-[436px] h-auto mb-2"
           onerror="this.style.display='none'"
         />
 
@@ -481,12 +506,8 @@
 
           <div class="space-y-5">
             <div>
-              <a
-                href="mailto:support@authorityindexlabs.com"
-                class="text-navy text-xl font-semibold hover:text-gold transition-colors duration-200 break-all"
-                aria-label="Email Authority Index Labs at support@authorityindexlabs.com"
-              >
-                support@authorityindexlabs.com
+              <a href="/cdn-cgi/l/email-protection#e5969095958a9791a58490918d8a978c919c8c8b81809d89848796cb868a88" class="text-navy text-xl font-semibold hover:text-gold transition-colors duration-200 break-all" aria-label="Email Authority Index Labs at support@authorityindexlabs.com">
+                <span class="__cf_email__" data-cfemail="e3909693938c9197a38296978b8c918a979a8a8d87869b8f828190cd808c8e">[email&#160;protected]</span>
               </a>
             </div>
             <div>
@@ -522,10 +543,10 @@
         <!-- Column 1: Logo + description + copyright -->
         <div class="flex flex-col gap-4">
           <img
-            src="/assets/images/ail-logo-white.png"
+            src="/assets/images/ail-logo.png"
             alt="Authority Index Labs"
-            class="h-10 w-auto"
-            onerror="this.src='/assets/images/ail-logo.png'; this.style.filter='brightness(0) invert(1)'; this.onerror=null;"
+            class="footer-logo h-14 w-auto self-start shrink-0"
+            onerror="this.style.display='none'"
           />
           <p class="text-white/70 text-sm leading-relaxed max-w-xs">
             Building consumer platforms that put trustworthiness and reliability back into applications and AI.
@@ -571,7 +592,7 @@
   <!-- ============================================================
        SCRIPTS
        ============================================================ -->
-  <script>
+  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
     // ── Navigation: transparent over hero, white on scroll ──
     const nav = document.getElementById('site-nav');
     const navLinks = document.querySelectorAll('.nav-link');
