@@ -6,11 +6,34 @@ Static credibility landing page for [authorityindexlabs.com](https://authorityin
 
 ---
 
+## How to deploy
+
+> **Important:** Git pushes do NOT auto-deploy. You must run `wrangler deploy` manually every time you want changes to go live. Do NOT use the Cloudflare dashboard "New deployment" upload — it only uploads the single file you drop in, not the full site.
+
+**Every time you make changes:**
+
+1. Edit the files in `C:\AIL\website`
+2. Open a terminal and navigate to the repo:
+   ```
+   cd C:\AIL\website
+   ```
+3. Deploy to Cloudflare:
+   ```
+   wrangler deploy
+   ```
+4. Changes are live within seconds at [authorityindexlabs.com](https://authorityindexlabs.com)
+5. Commit and push to GitHub to keep the repo in sync:
+   ```
+   git add -A
+   git commit -m "your message"
+   git push
+   ```
+
+**First time only:** If `wrangler` isn't installed, run `npm install -g wrangler` first, then authenticate with `wrangler login`.
+
+---
+
 ## Setup and Deployment
-
-### How deployment works
-
-This repo is connected to a Cloudflare Worker (`website`). Pushing to `main` triggers an automatic deployment via the `wrangler.jsonc` static assets configuration. No build step required — Cloudflare serves the repo root directly.
 
 ### Verify a deployment
 
@@ -42,7 +65,7 @@ Both snippets have placeholder comments in `<head>` of `index.html`:
 2. Navigate to your project > **Project Settings** > **Snippet**
 3. Copy the snippet and paste it in `index.html`, replacing the PostHog placeholder comment
 
-After pasting either snippet, commit and push to `main`. The site redeploys automatically within ~30 seconds.
+After pasting either snippet, run `wrangler deploy` from `C:\AIL\website`, then commit and push to GitHub.
 
 ---
 
