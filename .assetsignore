@@ -1,0 +1,9 @@
+# Files/directories that must NOT be published as public static assets.
+# Cloudflare Workers Assets uses .gitignore-style patterns.
+.git
+.wrangler
+.gitignore
+.assetsignore
+node_modules
+README.md
+*.log
