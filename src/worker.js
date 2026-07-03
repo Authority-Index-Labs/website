@@ -1,34 +1,46 @@
-// TikTok Marketing API OAuth endpoints, bolted onto the otherwise-static AIL site.
+// TikTok Marketing API OAuth + ad-click tracking, bolted onto the otherwise-static AIL site.
 //
-// Routing: wrangler.jsonc sets `run_worker_first: ["/tiktok/*"]`, so this Worker
-// ONLY executes for /tiktok/* paths. Every other request is delegated untouched
-// to the static-assets binding (env.ASSETS), so the marketing site is unaffected.
+// Routing: wrangler.jsonc sets `run_worker_first: ["/tiktok/*", "/go/*"]`, so this Worker
+// ONLY executes for those paths. Every other request is delegated untouched to the
+// static-assets binding (env.ASSETS), so the marketing site is unaffected.
 //
 // Flow:
 //   GET /tiktok/auth     -> 302 to TikTok's consent screen (sets a state cookie)
 //   GET /tiktok/callback -> TikTok redirects here with ?auth_code=...; we exchange
 //                           it for a long-lived access token and show it once.
+//   GET /go/:campaign_id -> ad-click landing link (TikTok ads point here, not straight to
+//                           the store). Records the click against tessera-api, then 302s to
+//                           the right store. See handleGo for the attribution design.
 //
 // Secrets required (set via `wrangler secret put`):
 //   TIKTOK_APP_ID, TIKTOK_APP_SECRET
+// Vars required (wrangler.jsonc `vars`):
+//   TESSERA_API_BASE — tessera-api's Cloudflare-fronted production domain (NOT the raw
+//     Railway origin — same requirement as the RevenueCat webhook, see tessera-api's
+//     app/routers/webhooks.py). Missing -> /go still redirects, just without recording
+//     the click (best-effort, see handleGo).
+//   IOS_STORE_URL, ANDROID_STORE_URL — optional overrides; sane iOS default baked in,
+//     Android has no confirmed Play Store listing yet so it falls back to the iOS URL.
 // Optional binding:
-//   TIKTOK_KV (KV namespace) — if bound, the token is also stored server-side.
+//   TIKTOK_KV (KV namespace) — if bound, the OAuth token is also stored server-side.
 
 const TIKTOK_BASE = "https://business-api.tiktok.com";
 const REDIRECT_URI = "https://authorityindexlabs.com/tiktok/callback";
+const DEFAULT_IOS_STORE_URL = "https://apps.apple.com/app/id6784012468";
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
     try {
       if (url.pathname === "/tiktok/auth") return startAuth(env);
       if (url.pathname === "/tiktok/callback") return handleCallback(request, url, env);
+      if (url.pathname.startsWith("/go/")) return handleGo(request, url, env, ctx);
     } catch (err) {
       return json({ error: String((err && err.message) || err) }, 500);
     }
 
-    // Not a TikTok route — serve the static site exactly as before.
+    // Not a tracked route — serve the static site exactly as before.
     return env.ASSETS.fetch(request);
   },
 };
@@ -111,6 +123,76 @@ async function handleCallback(request, url, env) {
      <pre>${escapeHtml(JSON.stringify(scope, null, 2))}</pre>
      <p>${persisted ? "Also saved to KV (keys: <code>access_token</code>, <code>advertiser_ids</code>)." : "<em>Not persisted — no KV bound. Copy the token now; this page won't show it again.</em>"}</p>`
   );
+}
+
+// ── Ad-click landing link: TikTok ads point here instead of the store directly ──
+// GET /go/:campaign_id?ad_id=...  (ttclid is TikTok's own auto-appended click id, present
+// when "URL parameters" tracking is enabled on the ad — read here, not relied upon).
+//
+// Records the click against tessera-api with the REAL visitor's IP (read from THIS request's
+// own CF-Connecting-IP header) — never inferred by tessera-api itself, which would otherwise
+// see this Worker's egress IP, not the person who clicked. Fire-and-forget via ctx.waitUntil:
+// the ad spend already happened, so losing the install to a slow/down attribution call would
+// be worse than losing the attribution record — the redirect must never block on it.
+//
+// Store destination:
+//   - Android: builds the Play Store's own `referrer` query param ourselves, carrying
+//     campaign_id/ad_id verbatim. The app reads this via the Play Install Referrer API on
+//     first launch for an EXACT match — no IP guessing needed (see tessera-api's
+//     POST /v1/attribution/claim).
+//   - iOS: Apple has no equivalent passthrough (see the attribution plan's iOS caveat), so
+//     the destination is just the plain App Store URL; the app falls back to an approximate
+//     IP + time-window match server-side.
+function handleGo(request, url, env, ctx) {
+  const campaignId = url.pathname.slice("/go/".length).split("/")[0];
+  if (!campaignId) return new Response("Missing campaign id", { status: 400 });
+
+  const adId = url.searchParams.get("ad_id") || null;
+  const ttclid = url.searchParams.get("ttclid") || null;
+  const userAgent = request.headers.get("User-Agent") || "";
+  const clientIp = request.headers.get("CF-Connecting-IP") || "";
+  const platform = detectPlatform(userAgent);
+
+  if (env.TESSERA_API_BASE) {
+    ctx.waitUntil(
+      fetch(`${env.TESSERA_API_BASE}/v1/attribution/click`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          campaign_id: campaignId,
+          ad_id: adId,
+          ttclid,
+          client_ip: clientIp,
+          user_agent: userAgent,
+          platform,
+        }),
+      }).catch(() => {}) // best-effort — a failed attribution call must never surface to the visitor
+    );
+  }
+
+  return new Response(null, {
+    status: 302,
+    headers: { Location: storeUrl(platform, campaignId, adId, env) },
+  });
+}
+
+function detectPlatform(userAgent) {
+  if (/iPhone|iPad|iPod/i.test(userAgent)) return "ios";
+  if (/Android/i.test(userAgent)) return "android";
+  return "unknown";
+}
+
+function storeUrl(platform, campaignId, adId, env) {
+  if (platform === "android" && env.ANDROID_STORE_URL) {
+    const playUrl = new URL(env.ANDROID_STORE_URL);
+    const referrerParams = new URLSearchParams({ campaign_id: campaignId });
+    if (adId) referrerParams.set("ad_id", adId);
+    playUrl.searchParams.set("referrer", referrerParams.toString());
+    return playUrl.toString();
+  }
+  // iOS, unknown UA, or Android with no confirmed Play Store URL yet -> the App Store.
+  // No query-param passthrough is possible through Apple's install flow either way.
+  return env.IOS_STORE_URL || DEFAULT_IOS_STORE_URL;
 }
 
 // ── helpers ──
