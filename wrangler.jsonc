@@ -2,12 +2,21 @@
   "name": "website",
   "compatibility_date": "2026-05-07",
   "main": "src/worker.js",
+  // TESSERA_API_BASE must be tessera-api's Cloudflare-fronted production domain (not the raw
+  // Railway origin — see src/worker.js's header comment). Fill in before deploying, or /go
+  // links redirect fine but silently skip recording the click. ANDROID_STORE_URL is unset
+  // until Tessera has a confirmed Play Store listing.
+  "vars": {
+    "TESSERA_API_BASE": "",
+    "IOS_STORE_URL": "https://apps.apple.com/app/id6784012468",
+    "ANDROID_STORE_URL": ""
+  },
   "assets": {
     "directory": "./",
     "binding": "ASSETS",
     "not_found_handling": "single-page-application",
     // The Worker runs FIRST only for these paths; every other request is
     // served straight from static assets exactly as before.
-    "run_worker_first": ["/tiktok/*"]
+    "run_worker_first": ["/tiktok/*", "/go/*"]
   }
 }
