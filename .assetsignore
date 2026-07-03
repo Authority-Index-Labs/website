@@ -7,3 +7,7 @@
 node_modules
 README.md
 *.log
+src
+wrangler.jsonc
+package.json
+package-lock.json

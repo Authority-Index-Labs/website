@@ -1,8 +1,13 @@
 {
   "name": "website",
   "compatibility_date": "2026-05-07",
+  "main": "src/worker.js",
   "assets": {
     "directory": "./",
-    "not_found_handling": "single-page-application"
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    // The Worker runs FIRST only for these paths; every other request is
+    // served straight from static assets exactly as before.
+    "run_worker_first": ["/tiktok/*"]
   }
 }
