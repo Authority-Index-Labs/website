@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex" />
+  <title>Email confirmed — Tessera</title>
+  <link rel="icon" href="/assets/images/favicon.ico" />
+  <style>
+    :root { --navy: #1a3a6e; --navy-dark: #0f2347; --gold: #c8a44b; --ink: #1a2536; --muted: #5b6b82; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: linear-gradient(160deg, #f6f8fc 0%, #eef2f9 100%);
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      min-height: 100%;
+    }
+    .card {
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 12px 40px rgba(15, 35, 71, 0.10);
+      max-width: 460px;
+      width: 100%;
+      padding: 44px 36px 40px;
+      text-align: center;
+    }
+    .brand {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--navy);
+      margin-bottom: 28px;
+    }
+    .check {
+      width: 76px;
+      height: 76px;
+      border-radius: 50%;
+      background: var(--navy);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+      box-shadow: 0 6px 18px rgba(26, 58, 110, 0.28);
+    }
+    .check svg { width: 38px; height: 38px; }
+    h1 { font-size: 26px; font-weight: 700; color: var(--navy-dark); letter-spacing: -0.01em; margin-bottom: 12px; }
+    p { font-size: 16px; line-height: 1.6; color: var(--muted); }
+    p + p { margin-top: 14px; }
+    .rule { height: 3px; width: 44px; background: var(--gold); border-radius: 3px; margin: 26px auto 0; }
+    strong { color: var(--ink); font-weight: 600; }
+    /* "Open Tessera" button — shown only on phones (see script). Lets a user who
+       confirmed on their device jump straight back into the app to sign in. */
+    .open-app {
+      display: none;
+      margin: 26px auto 4px;
+      padding: 14px 26px;
+      background: var(--navy);
+      color: #fff;
+      font-size: 16px;
+      font-weight: 600;
+      text-decoration: none;
+      border-radius: 12px;
+      box-shadow: 0 6px 18px rgba(26, 58, 110, 0.28);
+    }
+    .open-app:active { background: var(--navy-dark); }
+    body.is-mobile .open-app { display: inline-block; }
+    /* On desktop the deep link can't open the app, so hide the mobile-only hint. */
+    .mobile-hint { display: none; }
+    body.is-mobile .mobile-hint { display: block; }
+    body.is-mobile .desktop-hint { display: none; }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div class="brand">Tessera</div>
+    <div class="check" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 6 9 17l-5-5" />
+      </svg>
+    </div>
+    <h1>Your email is confirmed</h1>
+    <p>Thanks! You’ve verified your email.</p>
+    <p class="desktop-hint">You can close this tab and <strong>return to Tessera to log in.</strong></p>
+    <p class="mobile-hint">Head back to <strong>Tessera to log in.</strong></p>
+    <a class="open-app" id="openApp" href="tessera://">Open Tessera</a>
+    <div class="rule"></div>
+  </main>
+  <script>
+    // On a phone, this page was almost certainly opened from the confirmation
+    // email in a mobile browser, so surface a one-tap way back into the app and
+    // auto-attempt the deep link. The app registers the "tessera://" scheme
+    // (same one used by password reset), so this opens Tessera to the sign-in
+    // screen when it's installed; if it isn't, nothing happens and the message
+    // above remains. Desktop is left as a plain "you're verified" page.
+    (function () {
+      var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      if (!isMobile) return;
+      document.body.classList.add("is-mobile");
+      // Best-effort auto-open shortly after load. Wrapped so a browser that
+      // blocks the scheme navigation can't throw and blank the page.
+      setTimeout(function () {
+        try { window.location.href = "tessera://"; } catch (e) {}
+      }, 500);
+    })();
+  </script>
+</body>
+</html>
