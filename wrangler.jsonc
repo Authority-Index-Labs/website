@@ -7,7 +7,7 @@
   // links redirect fine but silently skip recording the click. ANDROID_STORE_URL is unset
   // until Tessera has a confirmed Play Store listing.
   "vars": {
-    "TESSERA_API_BASE": "",
+    "TESSERA_API_BASE": "https://api.your-tessera.com",
     "IOS_STORE_URL": "https://apps.apple.com/app/id6784012468",
     "ANDROID_STORE_URL": ""
   },
