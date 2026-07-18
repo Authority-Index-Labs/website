@@ -1,6 +1,6 @@
 // TikTok Marketing API OAuth + ad-click tracking, bolted onto the otherwise-static AIL site.
 //
-// Routing: wrangler.jsonc sets `run_worker_first: ["/tiktok/*", "/go/*"]`, so this Worker
+// Routing: wrangler.jsonc sets `run_worker_first: ["/tiktok/*", "/go/*", "/r/*"]`, so this Worker
 // ONLY executes for those paths. Every other request is delegated untouched to the
 // static-assets binding (env.ASSETS), so the marketing site is unaffected.
 //
@@ -11,6 +11,10 @@
 //   GET /go/:campaign_id -> ad-click landing link (TikTok ads point here, not straight to
 //                           the store). Records the click against tessera-api, then 302s to
 //                           the right store. See handleGo for the attribution design.
+//   GET /r/:code         -> referral landing link (AUT-156 E3, self-built — no Branch).
+//                           Same design as /go but keyed on a user referral code instead of
+//                           a campaign: records the click (kind=referral), then 302s to the
+//                           right store. Invalid codes fall back to /get. See handleReferral.
 //
 // Secrets required (set via `wrangler secret put`):
 //   TIKTOK_APP_ID, TIKTOK_APP_SECRET
@@ -36,6 +40,7 @@ export default {
       if (url.pathname === "/tiktok/auth") return startAuth(env);
       if (url.pathname === "/tiktok/callback") return handleCallback(request, url, env);
       if (url.pathname.startsWith("/go/")) return handleGo(request, url, env, ctx);
+      if (url.pathname.startsWith("/r/")) return handleReferral(request, url, env, ctx);
     } catch (err) {
       return json({ error: String((err && err.message) || err) }, 500);
     }
@@ -174,6 +179,78 @@ function handleGo(request, url, env, ctx) {
     status: 302,
     headers: { Location: storeUrl(platform, campaignId, adId, env) },
   });
+}
+
+// ── Referral landing link (AUT-156 E3): share links point here, not straight to the store ──
+// GET /r/:code — <code> is a user referral code (uppercase alphanumeric, 4-16 chars; treated
+// case-insensitively). Frozen contract shared with the tessera-api and tessera-app AUT-156 PRs:
+//
+//   - Click recording: additive fields on the same /v1/attribution/click endpoint /go uses —
+//     kind: "referral" + referral_code — with IP/UA handling identical to /go (real visitor IP
+//     from CF-Connecting-IP, fire-and-forget via ctx.waitUntil; a failed or slow attribution
+//     call must NEVER block or break the redirect).
+//   - Android: Play Store URL with the `referrer` param set to the URL-encoded string
+//     `referral_code=<CODE>` — the app reads it via the Play Install Referrer API on first
+//     launch for an exact match (mirrors /go's campaign_id passthrough).
+//   - iOS: plain App Store product page (no query passthrough exists on Apple's install flow);
+//     server-side IP + time-window matching covers attribution.
+//   - Anything else (desktop / unknown UA) or an invalid code: 302 to /get — never a 500,
+//     never a broken page.
+const REFERRAL_CODE_RE = /^[A-Z0-9]{4,16}$/;
+
+function handleReferral(request, url, env, ctx) {
+  const rawCode = url.pathname.slice("/r/".length).split("/")[0];
+  let code = rawCode;
+  try {
+    code = decodeURIComponent(rawCode);
+  } catch {
+    // Malformed percent-escape (e.g. /r/%zz) — keep the raw segment; the regex rejects it below.
+  }
+  code = code.toUpperCase();
+
+  // Invalid or missing code -> the /get device-detect fallback, never an error page.
+  if (!REFERRAL_CODE_RE.test(code)) {
+    return new Response(null, { status: 302, headers: { Location: "/get" } });
+  }
+
+  const userAgent = request.headers.get("User-Agent") || "";
+  const clientIp = request.headers.get("CF-Connecting-IP") || "";
+  const platform = detectPlatform(userAgent);
+
+  if (env.TESSERA_API_BASE) {
+    ctx.waitUntil(
+      fetch(`${env.TESSERA_API_BASE}/v1/attribution/click`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          kind: "referral",
+          referral_code: code,
+          client_ip: clientIp,
+          user_agent: userAgent,
+          platform,
+        }),
+      }).catch(() => {}) // best-effort — a failed attribution call must never surface to the visitor
+    );
+  }
+
+  return new Response(null, {
+    status: 302,
+    headers: { Location: referralStoreUrl(platform, code, env) },
+  });
+}
+
+function referralStoreUrl(platform, code, env) {
+  if (platform === "android" && env.ANDROID_STORE_URL) {
+    const playUrl = new URL(env.ANDROID_STORE_URL);
+    playUrl.searchParams.set("referrer", new URLSearchParams({ referral_code: code }).toString());
+    return playUrl.toString();
+  }
+  if (platform === "ios" || (platform === "android" && !env.ANDROID_STORE_URL)) {
+    // iOS, or Android before a Play Store URL is configured -> the App Store (same fallback /go uses).
+    return env.IOS_STORE_URL || DEFAULT_IOS_STORE_URL;
+  }
+  // Desktop / unknown UA -> the device-detect page, per the frozen contract.
+  return "/get";
 }
 
 function detectPlatform(userAgent) {
