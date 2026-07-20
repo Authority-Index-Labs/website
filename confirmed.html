@@ -70,6 +70,19 @@
     }
     .open-app:active { background: var(--navy-dark); }
     body.is-mobile .open-app { display: inline-block; }
+    /* "Continue on the web" — always shown, so a confirmed user is never stuck waiting on an
+       app install. Secondary to the app button on phones, primary route on desktop. */
+    .web-link {
+      display: inline-block;
+      margin-top: 18px;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--navy);
+      text-decoration: none;
+      border-bottom: 2px solid var(--gold);
+      padding-bottom: 2px;
+    }
+    .web-link:hover { color: var(--navy-dark); }
     /* On desktop the deep link can't open the app, so hide the mobile-only hint. */
     .mobile-hint { display: none; }
     body.is-mobile .mobile-hint { display: block; }
@@ -86,9 +99,10 @@
     </div>
     <h1>Your email is confirmed</h1>
     <p>Thanks! You’ve verified your email.</p>
-    <p class="desktop-hint">You can close this tab and <strong>return to Tessera to log in.</strong></p>
-    <p class="mobile-hint">Head back to <strong>Tessera to log in.</strong></p>
+    <p class="desktop-hint">Log in on the web, or <strong>return to the Tessera app.</strong></p>
+    <p class="mobile-hint">Head back to <strong>Tessera to log in</strong>, or continue in this browser.</p>
     <a class="open-app" id="openApp" href="tessera://">Open Tessera</a>
+    <a class="web-link" href="https://app.your-tessera.com/signin">Continue on the web &#x2192;</a>
     <div class="rule"></div>
   </main>
   <script>
