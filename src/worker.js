@@ -14,7 +14,9 @@
 //   GET /r/:code         -> referral landing link (AUT-156 E3, self-built — no Branch).
 //                           Same design as /go but keyed on a user referral code instead of
 //                           a campaign: records the click (kind=referral), then 302s to the
-//                           right store. Invalid codes fall back to /get. See handleReferral.
+//                           right store on mobile, or to the web app's signup route (carrying
+//                           the code as ?ref=) on desktop. Invalid codes fall back to /get.
+//                           See handleReferral.
 //
 // Secrets required (set via `wrangler secret put`):
 //   TIKTOK_APP_ID, TIKTOK_APP_SECRET
@@ -31,6 +33,9 @@
 const TIKTOK_BASE = "https://business-api.tiktok.com";
 const REDIRECT_URI = "https://authorityindexlabs.com/tiktok/callback";
 const DEFAULT_IOS_STORE_URL = "https://apps.apple.com/app/id6784012468";
+// Tessera on the web (AUT-276 epic). Not resolvable until DNS is cut over (AUT-287), which is
+// why nothing in this repo may be deployed before then — see README's manual-deploy warning.
+const WEB_APP_SIGNUP_URL = "https://app.your-tessera.com/signup";
 
 export default {
   async fetch(request, env, ctx) {
@@ -194,8 +199,12 @@ function handleGo(request, url, env, ctx) {
 //     launch for an exact match (mirrors /go's campaign_id passthrough).
 //   - iOS: plain App Store product page (no query passthrough exists on Apple's install flow);
 //     server-side IP + time-window matching covers attribution.
-//   - Anything else (desktop / unknown UA) or an invalid code: 302 to /get — never a 500,
-//     never a broken page.
+//   - Desktop / unknown UA: 302 to the web app's signup route with `?ref=<CODE>` (AUT-298).
+//     Desktop has no install-referrer channel, so the query param is the only way attribution
+//     survives the hop; the web app must read it (AUT-294).
+//   - An invalid code: 302 to /get — never a 500, never a broken page. There is no /get page on
+//     this host, so the SPA not-found fallback serves index.html, which now carries its own
+//     signup + App Store entry points.
 const REFERRAL_CODE_RE = /^[A-Z0-9]{4,16}$/;
 
 function handleReferral(request, url, env, ctx) {
@@ -249,8 +258,15 @@ function referralStoreUrl(platform, code, env) {
     // iOS, or Android before a Play Store URL is configured -> the App Store (same fallback /go uses).
     return env.IOS_STORE_URL || DEFAULT_IOS_STORE_URL;
   }
-  // Desktop / unknown UA -> the device-detect page, per the frozen contract.
-  return "/get";
+  // Desktop / unknown UA -> the web app's signup route, carrying the referral code as `ref`.
+  // This is the one platform with no install-referrer channel at all: previously these visitors
+  // were sent to /get, which has no page on this host, so the referral code was silently dropped.
+  // The web app is the only destination that can actually receive the attribution here.
+  // AUT-294 owns the app side: it must read `?ref=` on /signup and attach it to the account it
+  // creates. Until it does, this is still strictly better than /get (a real signup page, no 404).
+  const webUrl = new URL(WEB_APP_SIGNUP_URL);
+  webUrl.searchParams.set("ref", code);
+  return webUrl.toString();
 }
 
 function detectPlatform(userAgent) {

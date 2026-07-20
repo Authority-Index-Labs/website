@@ -200,6 +200,22 @@
           <a href="#team" class="nav-link text-white/90 hover:text-gold font-medium text-sm tracking-wide transition-colors duration-200" role="menuitem">Team</a>
           <a href="#approach" class="nav-link text-white/90 hover:text-gold font-medium text-sm tracking-wide transition-colors duration-200" role="menuitem">Approach</a>
           <a href="#contact" class="nav-link text-white/90 hover:text-gold font-medium text-sm tracking-wide transition-colors duration-200" role="menuitem">Contact</a>
+
+          <!-- Tessera web entry points. "Sign in" carries .nav-link so it flips white -> navy
+               with the rest on scroll; the gold "Sign up" button deliberately does NOT, so it
+               reads the same over the hero and over the white nav. -->
+          <a
+            href="https://app.your-tessera.com/signin"
+            class="nav-link text-white/90 hover:text-gold font-medium text-sm tracking-wide transition-colors duration-200"
+            role="menuitem"
+            aria-label="Sign in to Tessera"
+          >Sign in</a>
+          <a
+            href="https://app.your-tessera.com/signup"
+            class="bg-gold hover:bg-gold-dark text-navy-dark hover:text-navy-dark font-semibold text-sm tracking-wide px-5 py-2.5 rounded-lg transition-colors duration-200"
+            role="menuitem"
+            aria-label="Sign up for Tessera"
+          >Sign up</a>
         </div>
 
         <!-- Mobile menu button -->
@@ -225,6 +241,20 @@
         <a href="#team" class="mobile-nav-link text-white/90 hover:text-gold font-medium py-1 transition-colors" role="menuitem">Team</a>
         <a href="#approach" class="mobile-nav-link text-white/90 hover:text-gold font-medium py-1 transition-colors" role="menuitem">Approach</a>
         <a href="#contact" class="mobile-nav-link text-white/90 hover:text-gold font-medium py-1 transition-colors" role="menuitem">Contact</a>
+
+        <!-- Tessera web entry points (mirrors the desktop nav) -->
+        <a
+          href="https://app.your-tessera.com/signin"
+          class="mobile-nav-link text-white/90 hover:text-gold font-medium py-1 transition-colors"
+          role="menuitem"
+          aria-label="Sign in to Tessera"
+        >Sign in</a>
+        <a
+          href="https://app.your-tessera.com/signup"
+          class="mobile-nav-link bg-gold hover:bg-gold-dark text-navy-dark hover:text-navy-dark font-semibold text-center py-2.5 rounded-lg transition-colors"
+          role="menuitem"
+          aria-label="Sign up for Tessera"
+        >Sign up</a>
       </div>
     </div>
   </nav>
@@ -267,7 +297,31 @@
 
         <!-- Subheadline -->
         <p class="text-gold text-lg md:text-2xl font-medium max-w-2xl leading-relaxed">
-          Building trustworthy and reliable mobile applications that make advanced technology accessible.
+          Building trustworthy and reliable applications that make advanced technology accessible.
+        </p>
+
+        <!-- Primary calls to action: Tessera on the web, alongside the App Store.
+             Neither path is the "real" one — the same account works in both. -->
+        <div class="flex flex-col sm:flex-row items-center gap-4 mt-2">
+          <a
+            href="https://app.your-tessera.com/signup"
+            class="bg-gold hover:bg-gold-dark text-navy-dark hover:text-navy-dark font-semibold text-base px-8 py-3.5 rounded-lg shadow-lg transition-colors duration-200"
+          >
+            Sign up for Tessera
+          </a>
+          <a
+            href="https://app.your-tessera.com/signin"
+            class="text-white/90 hover:text-gold font-medium text-base underline underline-offset-4 decoration-white/40 transition-colors duration-200"
+          >
+            Sign in
+          </a>
+        </div>
+        <p class="text-white/70 text-sm">
+          Use Tessera in your browser or on iPhone —
+          <a
+            href="https://apps.apple.com/app/id6784012468"
+            class="text-white/90 hover:text-gold underline underline-offset-2 transition-colors duration-200"
+          >download on the App Store</a>.
         </p>
       </div>
 
@@ -332,14 +386,35 @@
                 Tessera is the personal AI memory and identity platform that gives every user a portable, user-controlled profile every AI app can use, with permission. The user always knows and controls exactly what Tessera knows about them.
               </p>
             </div>
-            <a
-              href="#"
-              class="inline-flex items-center gap-2 text-navy font-semibold hover:text-gold transition-colors duration-200 mt-auto group"
-              aria-label="Visit the Tessera site (coming soon)"
-            >
-              Visit the Tessera site
-              <span aria-hidden="true" class="group-hover:translate-x-1 transition-transform duration-200">&#x2192;</span>
-            </a>
+            <!-- Two equal ways in: the web app and the App Store. The same account works in
+                 both, so neither is presented as the primary or "real" one. -->
+            <div class="mt-auto flex flex-col gap-4">
+              <p class="text-gray-600 text-sm leading-relaxed">
+                AI made personal and private. Start in your browser or on iPhone — it is the same
+                account either way, and you only pay for what you actually use.
+              </p>
+              <div class="flex flex-wrap gap-3">
+                <a
+                  href="https://app.your-tessera.com/signup"
+                  class="inline-flex items-center justify-center bg-navy hover:bg-navy-dark text-white hover:text-white font-semibold text-sm px-5 py-3 rounded-lg transition-colors duration-200"
+                >
+                  Sign up on the web
+                </a>
+                <a
+                  href="https://apps.apple.com/app/id6784012468"
+                  class="inline-flex items-center justify-center border border-navy/25 hover:border-gold text-navy font-semibold text-sm px-5 py-3 rounded-lg transition-colors duration-200"
+                >
+                  Download on the App Store
+                </a>
+              </div>
+              <a
+                href="https://app.your-tessera.com/signin"
+                class="inline-flex items-center gap-2 text-navy font-medium text-sm hover:text-gold transition-colors duration-200 group"
+              >
+                Already have an account? Sign in
+                <span aria-hidden="true" class="group-hover:translate-x-1 transition-transform duration-200">&#x2192;</span>
+              </a>
+            </div>
           </article>
 
           <!-- Meriti -->
