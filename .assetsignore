@@ -9,5 +9,9 @@ README.md
 *.log
 src
 wrangler.jsonc
+# Internal compliance records (AUT-569). The provider data matrix records contract status with
+# our AI providers and is the source of truth the published claims are checked against. It is
+# deliberately NOT published: it names what we have and have not executed.
+compliance
 package.json
 package-lock.json
