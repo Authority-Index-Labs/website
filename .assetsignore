@@ -6,6 +6,9 @@
 .assetsignore
 node_modules
 README.md
+# The internal procedure for changing a policy (AUT-573). Names our repos, our deploy
+# mechanics and our known gaps. Not a document for the public.
+LEGAL.md
 *.log
 src
 wrangler.jsonc
