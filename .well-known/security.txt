@@ -1,0 +1,12 @@
+# Authority Index Labs, Inc. — security contact (RFC 9116)
+#
+# ⚠️ Expires is a HARD requirement of RFC 9116 and an expired file is treated as
+# invalid by scanners and researchers. Renew it before the date below. The renewal
+# is listed in website/LEGAL.md so it does not depend on anyone remembering.
+
+Contact: mailto:security@authorityindexlabs.com
+Contact: https://authorityindexlabs.com/security.html
+Expires: 2027-08-01T00:00:00.000Z
+Policy: https://authorityindexlabs.com/security.html
+Preferred-Languages: en
+Canonical: https://authorityindexlabs.com/.well-known/security.txt

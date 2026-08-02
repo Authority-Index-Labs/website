@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="index" />
+  <title>Vulnerability disclosure program &mdash; Authority Index Labs</title>
+  <link rel="canonical" href="https://authorityindexlabs.com/security.html" />
+  <link rel="icon" href="/assets/images/favicon.ico" />
+  <style>
+    :root { --navy: #1a3a6e; --navy-dark: #0f2347; --gold: #c8a44b; --ink: #1a2536; --muted: #5b6b82; --line: #e3e8f0; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: linear-gradient(160deg, #f6f8fc 0%, #eef2f9 100%);
+      color: var(--ink);
+      line-height: 1.6;
+      padding: 40px 20px 64px;
+      min-height: 100vh;
+    }
+    .card {
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 12px 40px rgba(15, 35, 71, 0.10);
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 44px 40px 40px;
+    }
+    .brand { font-size: 14px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--navy); margin-bottom: 22px; }
+    h1 { font-size: 28px; font-weight: 700; color: var(--navy-dark); letter-spacing: -0.01em; margin-bottom: 8px; }
+    .sub { color: var(--muted); font-size: 16px; margin-bottom: 8px; }
+    .rule { height: 3px; width: 44px; background: var(--gold); border-radius: 3px; margin: 20px 0 30px; }
+    h2 { font-size: 18px; font-weight: 700; color: var(--navy-dark); margin: 32px 0 10px; }
+    p { color: var(--ink); font-size: 16px; margin-bottom: 12px; }
+    ol, ul { margin: 0 0 12px 22px; }
+    li { margin-bottom: 8px; font-size: 16px; }
+    strong { font-weight: 600; }
+    a { color: var(--navy); font-weight: 600; }
+    code { background: #f1f4fa; border-radius: 6px; padding: 1px 7px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 14px; color: var(--navy-dark); }
+    .callout { background: #f6f8fc; border-left: 3px solid var(--gold); border-radius: 0 10px 10px 0; padding: 16px 20px; margin: 18px 0 20px; }
+    .callout p:last-child { margin-bottom: 0; }
+    .muted { color: var(--muted); font-size: 14px; margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--line); }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div class="brand">Authority Index Labs</div>
+    <h1>Vulnerability disclosure program</h1>
+    <p class="sub">How to report a security issue in Tessera, and what we promise in return.</p>
+    <div class="rule"></div>
+
+    <p>
+      Tessera holds things people would not want made public. If you have found a way to reach
+      data you should not be able to reach, we would rather hear it from you than read about it
+      somewhere else. This page tells you how to tell us, what you may and may not do while
+      looking, and what we commit to when you do.
+    </p>
+
+    <div class="callout">
+      <p>
+        <strong>Report to <a href="mailto:security@authorityindexlabs.com?subject=Security%20report">security@authorityindexlabs.com</a>.</strong>
+        Please include enough detail for us to reproduce the issue: the affected system, the steps,
+        and what you were able to access or change. A working proof of concept helps more than a
+        scanner output.
+      </p>
+    </div>
+
+    <h2>What we commit to</h2>
+    <ul>
+      <li>We will acknowledge your report within <strong>5 business days</strong>.</li>
+      <li>We will tell you our assessment, and whether we are fixing it, within <strong>30 days</strong>.</li>
+      <li>We will keep you updated while we work on a fix, and tell you when it ships.</li>
+      <li>
+        <strong>We will not pursue legal action</strong> against you for good-faith research that
+        stayed inside the rules below, and we will not report you to law enforcement for it. The
+        prohibition on probing and scanning in section 8 of our
+        <a href="/terms.html">Terms of Service</a> does not apply to research conducted under this
+        program.
+      </li>
+      <li>If you would like credit, we will name you when we publish the fix. If you would rather not be named, we will not name you.</li>
+    </ul>
+    <p>
+      We do not currently pay bounties. That may change; it is not a promise. Reports are welcome
+      either way.
+    </p>
+
+    <h2>In scope</h2>
+    <ul>
+      <li>The Tessera mobile app for iOS and Android</li>
+      <li><code>app.your-tessera.com</code>, the Tessera web app</li>
+      <li><code>api.your-tessera.com</code>, the Tessera API</li>
+      <li><code>your-tessera.com</code> and <code>authorityindexlabs.com</code></li>
+    </ul>
+
+    <h2>Out of scope</h2>
+    <p>
+      These are either not ours to fix or not things we consider vulnerabilities. Reports limited
+      to them will be closed politely.
+    </p>
+    <ul>
+      <li>
+        <strong>Third-party services we build on</strong>, including our hosting, database,
+        payment, subscription and AI providers. Report those to the provider. If you find a way to
+        abuse one of them <em>through Tessera</em>, that is in scope and we want to know.
+      </li>
+      <li><strong>Denial of service</strong>, volumetric testing, or anything that degrades the service for other people.</li>
+      <li><strong>Social engineering</strong> of our staff, users, or vendors, and physical attacks on any premises.</li>
+      <li>Findings from an automated scanner with no demonstrated impact, and missing best-practice headers or configuration with no working exploit.</li>
+      <li>Rate limiting or brute-force concerns without a demonstrated bypass.</li>
+      <li>Issues requiring a rooted or jailbroken device, a compromised account, or physical access to an unlocked phone.</li>
+      <li>Reports about software versions, without a working proof of concept against our systems.</li>
+    </ul>
+
+    <h2>Rules for research</h2>
+    <p>
+      These exist because our users are real people and their data is real. Breaking them takes you
+      outside the program, and outside the protection above.
+    </p>
+    <ul>
+      <li>
+        <strong>Use your own account.</strong> Never access, modify, download, or store another
+        person's data. If you find a way to reach someone else's data, stop at the point of proof:
+        capture only enough to demonstrate it, and tell us.
+      </li>
+      <li><strong>Do not degrade the service.</strong> No load testing, no denial of service, no automated scanning that generates significant traffic.</li>
+      <li><strong>Do not exfiltrate.</strong> Do not remove data from our systems, and delete anything you incidentally obtained once you have reported it.</li>
+      <li><strong>Do not persist.</strong> No backdoors, no maintaining access, no lateral movement beyond what is needed to demonstrate the issue.</li>
+      <li><strong>Give us time.</strong> Please do not disclose publicly until we have shipped a fix, or 90 days have passed from your report, whichever comes first. If we need longer, we will ask rather than assume.</li>
+      <li>Follow the law. This program cannot authorise anything a third party has not authorised.</li>
+    </ul>
+
+    <h2>If you find user data exposed</h2>
+    <p>
+      Tell us immediately, before doing anything else, at
+      <a href="mailto:security@authorityindexlabs.com?subject=URGENT%20-%20data%20exposure">security@authorityindexlabs.com</a>.
+      Do not download it, do not share it, and do not use it to demonstrate further issues. We will
+      treat that report as our highest priority and respond the same day where we can.
+    </p>
+
+    <p class="muted">
+      Authority Index Labs, Inc. &middot; Nashville, TN &middot;
+      <a href="/terms.html">Terms of Service</a> &middot;
+      <a href="/privacy.html">Privacy Notice</a><br />
+      Last updated August 1, 2026
+    </p>
+  </main>
+</body>
+</html>
