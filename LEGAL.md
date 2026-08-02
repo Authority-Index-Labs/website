@@ -38,7 +38,13 @@ Grep before trusting this table. It was accurate on 2026-08-01 and tables rot.
 | `terms.html` | the contract, including section 6 trial, section 7 refunds, section 39 referral program |
 | `privacy.html` | the privacy notice |
 | `cookies.html` | the cookie policy |
+| `security.html` | the vulnerability disclosure program. Terms section 8's probing carve-out points here, so deleting this page silently makes that clause inert again. |
+| `.well-known/security.txt` | RFC 9116 security contact |
 | `compliance/provider-data-matrix.md` | internal, NOT published. The evidence behind every no-training and retention claim above. Check claims against it before writing them. |
+
+⚠️ **`security.txt` expires.** RFC 9116 makes `Expires` mandatory and scanners treat an expired
+file as invalid, so it silently stops working rather than failing loudly. **The current value is
+`2027-08-01`. Renew it before then**, and keep the window under a year.
 
 ⚠️ **This site does not deploy on merge.** Publishing is a manual `wrangler` run from a working
 directory. Merging to `main` changes nothing that a user can see. See "Publishing" below, and
