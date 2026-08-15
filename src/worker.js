@@ -8,9 +8,12 @@
 //   GET /tiktok/auth     -> 302 to TikTok's consent screen (sets a state cookie)
 //   GET /tiktok/callback -> TikTok redirects here with ?auth_code=...; we exchange
 //                           it for a long-lived access token and show it once.
-//   GET /go/:campaign_id -> ad-click landing link (TikTok ads point here, not straight to
-//                           the store). Records the click against tessera-api, then 302s to
-//                           the right store. See handleGo for the attribution design.
+//   GET /go/:campaign_id -> ad-click landing link (ads point here, not straight to the
+//                           store). Records the click against tessera-api, then 302s to the
+//                           right store on mobile, or to the web app's signup route (carrying
+//                           campaign_id/ad_id) on desktop. your-tessera.com/go/* forwards
+//                           here so ads can advertise the product domain while clicks stay
+//                           recorded in one place. See handleGo for the attribution design.
 //   GET /r/:code         -> referral landing link (AUT-156 E3, self-built — no Branch).
 //                           Same design as /go but keyed on a user referral code instead of
 //                           a campaign: records the click (kind=referral), then 302s to the
@@ -135,9 +138,10 @@ async function handleCallback(request, url, env) {
   );
 }
 
-// ── Ad-click landing link: TikTok ads point here instead of the store directly ──
-// GET /go/:campaign_id?ad_id=...  (ttclid is TikTok's own auto-appended click id, present
-// when "URL parameters" tracking is enabled on the ad — read here, not relied upon).
+// ── Ad-click landing link: ads point here instead of the store directly ──
+// GET /go/:campaign_id?ad_id=...  (ttclid and fbclid are TikTok's and Meta's own
+// auto-appended click ids, present when URL-parameter tracking is enabled on the ad —
+// read here, not relied upon).
 //
 // Records the click against tessera-api with the REAL visitor's IP (read from THIS request's
 // own CF-Connecting-IP header) — never inferred by tessera-api itself, which would otherwise
@@ -145,7 +149,7 @@ async function handleCallback(request, url, env) {
 // the ad spend already happened, so losing the install to a slow/down attribution call would
 // be worse than losing the attribution record — the redirect must never block on it.
 //
-// Store destination:
+// Destination:
 //   - Android: builds the Play Store's own `referrer` query param ourselves, carrying
 //     campaign_id/ad_id verbatim. The app reads this via the Play Install Referrer API on
 //     first launch for an EXACT match — no IP guessing needed (see tessera-api's
@@ -153,12 +157,34 @@ async function handleCallback(request, url, env) {
 //   - iOS: Apple has no equivalent passthrough (see the attribution plan's iOS caveat), so
 //     the destination is just the plain App Store URL; the app falls back to an approximate
 //     IP + time-window match server-side.
+//   - Desktop / unknown UA: the web app's signup route, carrying campaign_id/ad_id as query
+//     params. This branch is why the route exists at all for paid web traffic: /go used to
+//     send a laptop visitor to an iPhone App Store page, which is a dead end AND loses the
+//     click, so every desktop ad impression was unattributable by construction. The referral
+//     route already had this branch (referralStoreUrl); this mirrors it exactly, including
+//     the reasoning: desktop has no install-referrer channel, so the query param is the only
+//     way attribution survives the hop, and it is DETERMINISTIC — better than the IP +
+//     time-window guess iOS is stuck with.
 function handleGo(request, url, env, ctx) {
-  const campaignId = url.pathname.slice("/go/".length).split("/")[0];
+  const rawCampaignId = url.pathname.slice("/go/".length).split("/")[0];
+  let campaignId = rawCampaignId;
+  try {
+    campaignId = decodeURIComponent(rawCampaignId);
+  } catch {
+    // Malformed percent-escape — keep the raw segment; the regex below rejects it.
+  }
   if (!campaignId) return new Response("Missing campaign id", { status: 400 });
+  // Validated because this value now reaches a redirect Location on ANOTHER origin. Same
+  // stance as the referral code: anything not well-formed is refused here rather than
+  // forwarded. Previously unvalidated, which was survivable only while every destination
+  // was a store URL we built ourselves.
+  if (!CAMPAIGN_ID_RE.test(campaignId)) {
+    return new Response("Invalid campaign id", { status: 400 });
+  }
 
-  const adId = url.searchParams.get("ad_id") || null;
+  const adId = cleanAdId(url.searchParams.get("ad_id"));
   const ttclid = url.searchParams.get("ttclid") || null;
+  const fbclid = url.searchParams.get("fbclid") || null;
   const userAgent = request.headers.get("User-Agent") || "";
   const clientIp = request.headers.get("CF-Connecting-IP") || "";
   const platform = detectPlatform(userAgent);
@@ -172,6 +198,7 @@ function handleGo(request, url, env, ctx) {
           campaign_id: campaignId,
           ad_id: adId,
           ttclid,
+          fbclid,
           client_ip: clientIp,
           user_agent: userAgent,
           platform,
@@ -182,8 +209,25 @@ function handleGo(request, url, env, ctx) {
 
   return new Response(null, {
     status: 302,
-    headers: { Location: storeUrl(platform, campaignId, adId, env) },
+    headers: {
+      Location: storeUrl(platform, campaignId, adId, env),
+      // no-store because this redirect is UA-dependent: a cached hop would let one
+      // visitor's platform decide another's. Same reasoning as /r and /get.
+      "cache-control": "no-store",
+    },
   });
+}
+
+// Campaign and ad ids are ours (we mint them when we name a campaign), so the alphabet is
+// deliberately narrow: letters, digits, dash, underscore. Kept permissive enough for
+// "meta-carousel-4" and for a platform-generated numeric ad id.
+const CAMPAIGN_ID_RE = /^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/;
+
+/** An ad id we are willing to forward, or null. Same alphabet as a campaign id. */
+function cleanAdId(raw) {
+  if (!raw) return null;
+  const value = raw.trim();
+  return CAMPAIGN_ID_RE.test(value) ? value : null;
 }
 
 // ── Referral landing link (AUT-156 E3): share links point here, not straight to the store ──
@@ -283,9 +327,24 @@ function storeUrl(platform, campaignId, adId, env) {
     playUrl.searchParams.set("referrer", referrerParams.toString());
     return playUrl.toString();
   }
-  // iOS, unknown UA, or Android with no confirmed Play Store URL yet -> the App Store.
-  // No query-param passthrough is possible through Apple's install flow either way.
-  return env.IOS_STORE_URL || DEFAULT_IOS_STORE_URL;
+  if (platform === "ios") {
+    // Apple allows no query passthrough on the install flow, so the app falls back to the
+    // server-side IP + time-window match.
+    return env.IOS_STORE_URL || DEFAULT_IOS_STORE_URL;
+  }
+  if (platform === "android") {
+    // Android before a Play Store URL is configured -> same App Store fallback the referral
+    // route uses. Kept explicit rather than falling through to the desktop branch, because a
+    // phone dropped onto a desktop signup page is a worse outcome than a wrong-store page.
+    return env.IOS_STORE_URL || DEFAULT_IOS_STORE_URL;
+  }
+  // Desktop / unknown UA -> web signup, carrying the campaign so the web app can claim it
+  // exactly. Param names match tessera-api's ClickBody fields deliberately, so the contract
+  // is one vocabulary end to end and a rename cannot half-land.
+  const webUrl = new URL(WEB_APP_SIGNUP_URL);
+  webUrl.searchParams.set("campaign_id", campaignId);
+  if (adId) webUrl.searchParams.set("ad_id", adId);
+  return webUrl.toString();
 }
 
 // ── helpers ──
