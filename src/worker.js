@@ -10,7 +10,7 @@
 //                           it for a long-lived access token and show it once.
 //   GET /go/:campaign_id -> ad-click landing link (ads point here, not straight to the
 //                           store). Records the click against tessera-api, then 302s to the
-//                           right store on mobile, or to the web app's signup route (carrying
+//                           right store on mobile, or to the marketing site (carrying
 //                           campaign_id/ad_id) on desktop. your-tessera.com/go/* forwards
 //                           here so ads can advertise the product domain while clicks stay
 //                           recorded in one place. See handleGo for the attribution design.
@@ -39,6 +39,14 @@ const DEFAULT_IOS_STORE_URL = "https://apps.apple.com/app/id6784012468";
 // Tessera on the web (AUT-276 epic). Not resolvable until DNS is cut over (AUT-287), which is
 // why nothing in this repo may be deployed before then — see README's manual-deploy warning.
 const WEB_APP_SIGNUP_URL = "https://app.your-tessera.com/signup";
+// Where a DESKTOP AD click lands. Deliberately the marketing site and not the signup form:
+// the first version of this branch sent 369 paid clicks straight to a form with nothing to
+// read on it (meta-carousel-4, 2026-08-19, $40 spent) and not one of them signed up. The
+// campaign rides along as query params; your-tessera.com stashes them and hands them to its
+// /get CTA, which forwards them to WEB_APP_SIGNUP_URL. Referral links (/r/) still go
+// straight to signup: someone arriving on a friend's recommendation has already had the
+// product explained to them.
+const WEB_LANDING_URL = "https://your-tessera.com/";
 
 export default {
   async fetch(request, env, ctx) {
@@ -157,14 +165,14 @@ async function handleCallback(request, url, env) {
 //   - iOS: Apple has no equivalent passthrough (see the attribution plan's iOS caveat), so
 //     the destination is just the plain App Store URL; the app falls back to an approximate
 //     IP + time-window match server-side.
-//   - Desktop / unknown UA: the web app's signup route, carrying campaign_id/ad_id as query
-//     params. This branch is why the route exists at all for paid web traffic: /go used to
-//     send a laptop visitor to an iPhone App Store page, which is a dead end AND loses the
-//     click, so every desktop ad impression was unattributable by construction. The referral
-//     route already had this branch (referralStoreUrl); this mirrors it exactly, including
-//     the reasoning: desktop has no install-referrer channel, so the query param is the only
+//   - Desktop / unknown UA: the marketing site (WEB_LANDING_URL), carrying campaign_id and
+//     ad_id as query params. This branch is why the route exists at all for paid web
+//     traffic: /go used to send a laptop visitor to an iPhone App Store page, which is a
+//     dead end AND loses the click, so every desktop ad impression was unattributable by
+//     construction. Desktop has no install-referrer channel, so the query param is the only
 //     way attribution survives the hop, and it is DETERMINISTIC — better than the IP +
-//     time-window guess iOS is stuck with.
+//     time-window guess iOS is stuck with. This pointed straight at signup until 2026-08-19;
+//     WEB_LANDING_URL carries why a cold ad click now gets the sales pitch first.
 function handleGo(request, url, env, ctx) {
   const rawCampaignId = url.pathname.slice("/go/".length).split("/")[0];
   let campaignId = rawCampaignId;
@@ -338,10 +346,10 @@ function storeUrl(platform, campaignId, adId, env) {
     // phone dropped onto a desktop signup page is a worse outcome than a wrong-store page.
     return env.IOS_STORE_URL || DEFAULT_IOS_STORE_URL;
   }
-  // Desktop / unknown UA -> web signup, carrying the campaign so the web app can claim it
-  // exactly. Param names match tessera-api's ClickBody fields deliberately, so the contract
-  // is one vocabulary end to end and a rename cannot half-land.
-  const webUrl = new URL(WEB_APP_SIGNUP_URL);
+  // Desktop / unknown UA -> the marketing site, carrying the campaign so it survives the
+  // hop to signup. Param names match tessera-api's ClickBody fields deliberately, so the
+  // contract is one vocabulary end to end and a rename cannot half-land.
+  const webUrl = new URL(WEB_LANDING_URL);
   webUrl.searchParams.set("campaign_id", campaignId);
   if (adId) webUrl.searchParams.set("ad_id", adId);
   return webUrl.toString();
