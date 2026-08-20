@@ -73,6 +73,27 @@ Legend for "No-training basis":
 | **xAI (Grok)** | Chat prompts and responses | **No**, nothing on file. Standard (non-Business) account. | ✅ **Covered by ZDR**, which is a setting we control rather than a tier we pay for. xAI's docs state that under ZDR, prompts, completions and associated metadata are not stored, logged, or used for any purpose **including model training, abuse monitoring, and product improvement**, beyond the immediate API call. | **None.** xAI's documented 30-day audit retention does not apply to ZDR-enabled teams. | ✅ **ENABLED 2026-08-01.** Verified by the `ZDR` badge on the Tessera team in the Console, xAI's own documented confirmation method. | Nothing beyond serving the request. |
 | **Voyage AI** | ⚠️ **The text of stored memory facts**, including health and financial values decrypted for the request | **No**, nothing on file. | ✅ **Opted out 2026-08-01.** Their default terms grant a worldwide, irrevocable, perpetual, royalty-free licence to use customer content to train AI models **unless you opt out**. We have opted out. | Zero-day going forward: content is deleted immediately after processing. ⚠️ **Content sent BEFORE the opt-out remains inside the original licence.** | Opt-out toggle, Organization, Terms of Service. Verified showing **Opted Out**. | Nothing, going forward. |
 | **Cartesia** | Voice transcription (**not live**) | **No**, nothing on file. | Not committed by default. Their DPA offers a Zero Data Retention setting that prohibits storage, logging and training. | Depends on the ZDR setting. | Available as a setting. | Automated and manual review of inputs and outputs is reserved. |
+| **OpenRouter** (a routing layer, not a model provider) | ⚠️ **Nothing yet.** The wiring merged 2026-08-20 but the lane is switched off (`OPENROUTER_ENABLED=false`) and no model is enabled, so no user content has reached them. Planned: background memory jobs, starting with the follow-up query rewriter and later extraction, which carry **decrypted memory facts including health and financial values**. | **No**, nothing on file. A DPA is available **on request** and has not been requested. Liability is capped at the greater of 12 months of fees or **$100**, and they disclaim warranties for regulated and customer-facing use. | **Published default.** "OpenRouter does not use your Inputs or Outputs for model training." Read 2026-08-20. | **Prompt and response text not stored.** Input and Output Logging is off by default and verified off 2026-08-20. Request **metadata is** retained: model, host, token counts, latency, cost. ⚠️ Turning logging on stores prompts and responses for a **minimum of 3 months** and, per their Terms, grants rights to "license or sell your User Content in anonymized form". It carries a **1% usage discount**, so it must stay off and be re-verified. | ✅ **Account-level Zero Data Retention enabled 2026-08-20**, every row including frontier, verified in Settings, Privacy. Our code also sends `zdr: true` and `data_collection: "deny"` on every request. The per-request setting ORs with the account setting and can only tighten, never loosen. | Routing only. They are not the party running the model. |
+| **CoreWeave and Venice** (the companies that actually run DeepSeek V4 Flash, reached through OpenRouter) | Same as the OpenRouter row. Nothing yet. | **No**, and there will not be one. We have no direct relationship with either; they are reachable only through OpenRouter. | ⚠️ **OpenRouter's classification, not their own terms read by us.** Both sit in OpenRouter's "retains nothing" group, and OpenRouter reports `canPublish: false` for all 30 companies serving this model. **Neither company's own terms have been read.** See open item 10. | Stated as none by that classification. Not independently verified. | ✅ Enforced per request by our own code, not by any contract. ⚠️ **The host pin is agreed but NOT yet implemented** (AUT-811). Until it ships, a request can reach any of the 30 companies serving this model, including DeepSeek's own service in China, which trains on inputs and retains them. | Serving the request. |
+
+---
+
+## A structural difference in the two OpenRouter rows
+
+Every other row in this table names one company that receives content under one policy. The
+OpenRouter rows do not work that way, and the copy has to respect the difference.
+
+1. **The counterparty is not the processor.** Our agreement, such as it is, would be with
+   OpenRouter. The company that actually sees the conversation is whoever is running the model
+   that day. Measured 2026-08-20: four identical requests reached three different companies.
+2. **The control is code, not a console toggle and not a contract.** Rule 6 below already warns
+   that three claims rest on settings that can be un-set. This one is weaker still: it rests on a
+   block of JSON our services attach to every request. A refactor that drops it makes the
+   published copy false with no console change, no deploy failure and no error.
+3. **DeepSeek the company is not in the path, by design.** DeepSeek V4 Flash is open weights.
+   DeepSeek publishes it; 30 other companies run it, and DeepSeek's own endpoint is among the
+   most expensive on the list. Pinned to CoreWeave and Venice, DeepSeek receives nothing.
+   Unpinned, it can receive everything, and it is the one host on that list that trains on inputs.
 
 ---
 
@@ -88,6 +109,8 @@ All read **2026-08-01** unless noted.
 | xAI | https://x.ai/legal/terms-of-service-enterprise |
 | Voyage AI | https://www.voyageai.com/tos ; https://docs.voyageai.com/docs/faq |
 | Cartesia | https://www.cartesia.ai/legal/dpa |
+| OpenRouter | https://openrouter.ai/privacy ; https://openrouter.ai/terms ; https://openrouter.ai/docs/guides/features/input-output-logging ; https://openrouter.ai/docs/features/provider-routing ; the account's Settings, Privacy page. All read **2026-08-20**. |
+| DeepSeek V4 Flash hosts | https://openrouter.ai/api/v1/providers ; https://openrouter.ai/api/v1/models/deepseek/deepseek-v4-flash/endpoints ; live routing tests through our own client. All read **2026-08-20**. |
 
 ---
 
@@ -111,6 +134,20 @@ All read **2026-08-01** unless noted.
    every call. We could assert on it and alert if it ever comes back false, which would turn a
    silently-reverted console setting into a visible failure. Worth a ticket if the connector work
    ever touches that adapter.
+8. **Request OpenRouter's DPA** (AUT-801). It is available on request and we have not asked.
+   This is the only row in the table where a background job would send decrypted memory facts to
+   a company we hold nothing with. Blocking before any user content moves.
+9. **Ship the host pin** (AUT-811). Agreed 2026-08-20: CoreWeave primary, Venice secondary, both
+   US headquartered with US datacenters. Until `only: ["coreweave", "venice"]` plus
+   `allow_fallbacks: false` rides on the request, the DeepSeek row's retention claim is not true.
+   Blocking before any user content moves.
+10. **Read CoreWeave's and Venice's own terms.** That row currently rests entirely on OpenRouter's
+   classification of them, and OpenRouter's own routing docs say their provider policy data "is
+   not a definitive source of third party data policies, but represents our best knowledge."
+   That is thinner evidence than anything else in this table.
+11. **Re-verify the OpenRouter logging toggle on a schedule.** It pays a 1% discount to turn on,
+   which is the same shape as the OpenAI free-token incentive we already decline. An incentive to
+   weaken a claim is a reason to re-check the claim, not a reason to trust it once.
 
 ---
 
@@ -134,3 +171,12 @@ All read **2026-08-01** unless noted.
    toggles rather than contracts: xAI ZDR, the Voyage opt-out, and OpenAI's sharing switches. If
    any of them is reverted, the copy becomes false with no code change and no deploy. That is an
    argument for periodic re-verification, not for weaker copy.
+7. **Never name DeepSeek as a company we send data to.** Under the pinned configuration it
+   receives nothing: it publishes the weights, other companies run them. Naming it would be wrong
+   in both directions at once, implying a relationship we do not have while hiding the companies
+   that actually see the content. Name the host, CoreWeave or Venice.
+8. **The OpenRouter guarantee lives in our source code.** A stronger version of rule 6. A console
+   toggle that gets reverted is at least visible in a console. A dropped JSON block is visible
+   nowhere, and the request still succeeds. Copy resting on it should be re-checked whenever the
+   provider adapter changes, and the served host should be recorded per call so the claim can be
+   audited after the fact rather than asserted.
