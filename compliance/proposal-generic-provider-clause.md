@@ -17,7 +17,7 @@ honestly promise, and it is the reason the wording below says "require" rather t
 
 ---
 
-## 1. Terms, section 28 — THIRD-PARTY AI PROVIDER TERMS ACKNOWLEDGMENT
+## 1. Terms, section 28: THIRD-PARTY AI PROVIDER TERMS ACKNOWLEDGMENT
 
 ### Current
 
@@ -54,7 +54,7 @@ honestly promise, and it is the reason the wording below says "require" rather t
 
 ---
 
-## 2. Terms — the no-training paragraph
+## 2. Terms: the no-training paragraph
 
 The existing paragraph names each provider and what each one commits to. **It should keep doing
 that**, and this proposal does not touch it, for one reason: it is a statement of fact about
@@ -72,7 +72,7 @@ is added, and the next person to add one will not read this file.
 
 ---
 
-## 3. Privacy Policy — the provider list becomes explicitly living
+## 3. Privacy Policy: the provider list becomes explicitly living
 
 ### Current
 
