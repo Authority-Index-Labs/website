@@ -12,8 +12,10 @@ disclosure is one that eventually does not get made.
 Policy, where they can be maintained as a living list. This is the ordinary pattern for
 sub-processor disclosure and it is what most vendors do.
 
-⚠️ **Read the two warnings at the bottom before adopting any of this.** One is about what we can
-honestly promise, and it is the reason the wording below says "require" rather than "ensure".
+⚠️ **Read the three warnings at the bottom before adopting any of this.** The first is about what
+we can honestly promise, and it is the reason the wording below says "require" rather than
+"ensure". The second is that adopting this proposal is itself the kind of change it exists to
+make unnecessary in future.
 
 ---
 
