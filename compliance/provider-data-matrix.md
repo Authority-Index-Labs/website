@@ -137,10 +137,13 @@ All read **2026-08-01** unless noted.
 8. **Request OpenRouter's DPA** (AUT-801). It is available on request and we have not asked.
    This is the only row in the table where a background job would send decrypted memory facts to
    a company we hold nothing with. Blocking before any user content moves.
-9. **Ship the host pin** (AUT-811). Agreed 2026-08-20: CoreWeave primary, Venice secondary, both
-   US headquartered with US datacenters. Until `only: ["coreweave", "venice"]` plus
-   `allow_fallbacks: false` rides on the request, the DeepSeek row's retention claim is not true.
-   Blocking before any user content moves.
+9. ✅ ~~**Ship the host pin** (AUT-811).~~ **DONE 2026-08-20.** `only: ["coreweave", "venice"]`
+   plus `allow_fallbacks: false` rides on every request, in BOTH services, from a single shared
+   definition per service. Each repo pins the exact dict in a test, so changing one alone fails
+   there rather than drifting. The background path also compares the host OpenRouter reports back
+   against the pinned set and logs `openrouter_host_outside_pin` at WARNING — a request served by
+   an unpinned company would otherwise make this table false while every response still looked
+   perfectly healthy.
 10. **Read CoreWeave's and Venice's own terms.** That row currently rests entirely on OpenRouter's
    classification of them, and OpenRouter's own routing docs say their provider policy data "is
    not a definitive source of third party data policies, but represents our best knowledge."
