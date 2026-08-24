@@ -4,12 +4,18 @@
   "main": "src/worker.js",
   // TESSERA_API_BASE must be tessera-api's Cloudflare-fronted production domain (not the raw
   // Railway origin — see src/worker.js's header comment). Fill in before deploying, or /go
-  // links redirect fine but silently skip recording the click. ANDROID_STORE_URL is unset
-  // until Tessera has a confirmed Play Store listing.
+  // links redirect fine but silently skip recording the click.
+  //
+  // ⚠️ ANDROID_STORE_URL IS LOAD-BEARING, AND EMPTY IS NOT A NEUTRAL VALUE. Both storeUrl()
+  // and referralStoreUrl() fall back to the APPLE App Store when it is empty — a deliberate
+  // choice made when there was no Play listing (a wrong store beat a desktop signup page on a
+  // phone), but it means every Android ad click landed on an iPhone-only page. Filled in
+  // 2026-08-24, once the Play listing was confirmed public. Never blank it again without
+  // changing that fallback: the symptom is invisible from the ad platform's reporting.
   "vars": {
     "TESSERA_API_BASE": "https://api.your-tessera.com",
     "IOS_STORE_URL": "https://apps.apple.com/app/id6784012468",
-    "ANDROID_STORE_URL": ""
+    "ANDROID_STORE_URL": "https://play.google.com/store/apps/details?id=com.authorityindexlabs.tessera"
   },
   "assets": {
     "directory": "./",
