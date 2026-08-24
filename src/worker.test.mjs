@@ -8,6 +8,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 
 import worker from "./worker.js";
 
@@ -44,11 +45,15 @@ async function run(path, { ua = DESKTOP_UA, env = {}, ip = "203.0.113.7" } = {})
 
 const API_ENV = { TESSERA_API_BASE: "https://api.example.test" };
 
-test("/go sends a desktop visitor to web signup carrying the campaign", async () => {
+// AUT-786 changed this destination from the signup form to the marketing site: a cold paid
+// click has to be sold before it is asked to register. The assertion below was not updated
+// with it and has been failing on main ever since — a red suite nobody reads is the same as
+// no suite, so it is corrected rather than deleted.
+test("/go sends a desktop visitor to the marketing site carrying the campaign", async () => {
   const { response } = await run("/go/meta-carousel-4?ad_id=12345");
   assert.equal(response.status, 302);
   const location = new URL(response.headers.get("Location"));
-  assert.equal(location.origin + location.pathname, "https://app.your-tessera.com/signup");
+  assert.equal(location.origin + location.pathname, "https://your-tessera.com/");
   assert.equal(location.searchParams.get("campaign_id"), "meta-carousel-4");
   assert.equal(location.searchParams.get("ad_id"), "12345");
   // A UA-dependent redirect must never be cached and replayed to a different device.
@@ -128,4 +133,20 @@ test("/r still forwards a valid referral code, unchanged", async () => {
   const { response } = await run("/r/ABCD23");
   assert.equal(response.status, 302);
   assert.match(response.headers.get("Location"), /apps\.apple\.com|app\.your-tessera\.com/);
+});
+
+// ── the config value that decides where every Android click lands ───────────────────────
+// storeUrl() and referralStoreUrl() BOTH fall back to the Apple App Store when
+// ANDROID_STORE_URL is empty. That was deliberate when there was no Play listing, but it
+// means a blank value silently sends every Android visitor to an iPhone-only page, and
+// nothing in the ad platform's reporting shows it. So the deployed value is asserted here.
+test("ANDROID_STORE_URL is actually set to the Play listing, not left blank", async () => {
+  const config = await readFile(new URL("../wrangler.jsonc", import.meta.url), "utf8");
+  const match = config.match(/"ANDROID_STORE_URL"\s*:\s*"([^"]*)"/);
+  assert.ok(match, "ANDROID_STORE_URL is missing from wrangler.jsonc entirely");
+  assert.match(
+    match[1],
+    /^https:\/\/play\.google\.com\/store\/apps\/details\?id=com\.authorityindexlabs\.tessera$/,
+    `blank or wrong ANDROID_STORE_URL sends every Android click to the App Store: "${match[1]}"`,
+  );
 });
