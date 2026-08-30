@@ -11,6 +11,14 @@ node_modules/
 .env.*
 !.env.example
 
+# AUT-990: private-key material, by extension. Nothing of the sort has ever been committed
+# here — history was scanned in full — and these lines are why it stays that way.
+*.pem
+*.p8
+*.p12
+*.jks
+*.key
+
 # Logs
 *.log
 npm-debug.log*
