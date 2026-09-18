@@ -78,6 +78,39 @@ Legend for "No-training basis":
 
 ---
 
+## Web search rows (added 2026-09-18, AUT-1311)
+
+When a model looks something up mid-reply, **a search query derived from the user's message leaves
+the model provider for a search index.** That is a recipient in its own right, so it gets its own
+rows. Stored memory is not sent to a search index as such, but the query the model forms can reflect
+memory that is in its context. The model forms the query from the
+redacted prompt (AUT-658), so on Grok and GPT it may contain `[user]` but not the real name.
+
+Switch state on the day this was written, verified in `tessera-api` `origin/develop` `app/config.py`:
+`web_search_enabled` defaults **True** (Anthropic search, live since before this ticket). The xAI,
+OpenAI and Vertex switches (`xai_web_search_enabled`, `openai_web_search_enabled`,
+`vertex_web_search_enabled`) do not exist yet; the Starter plan adds them defaulting **False**, and
+they stay off in production until AUT-556 shows sources.
+
+| Provider | What leaves for search | Status | Retention of the query | Training | Source |
+| --- | --- | --- | --- | --- | --- |
+| **Anthropic** (Claude models, server-side `web_search` tool) | A query the model forms from the turn | **Live** (kill switch `web_search_enabled`) | Same as the Anthropic row above. ⚠️ Anthropic may use its own search sub-processor; **not established** which one, and the policy does not name one. | Published default, same as above. | Anthropic row sources. |
+| **xAI** (Grok, `web_search` tool on the Responses API, AUT-554) | A query the model forms from the turn | **Not live.** Switch off until AUT-556. | Team is on **ZDR**, which covers API inputs and outputs. ⚠️ xAI does not separately document how its search backend handles the query under ZDR. ZDR disables the *stateful* Responses API, so our requests must send `store: false` (the plan does). | Covered by ZDR, same as above. | https://docs.x.ai/developers/tools/web-search ; https://docs.x.ai/docs/faq/security (read 2026-09-18) |
+| **OpenAI** (GPT, `web_search` tool on the Responses API, AUT-553) | A query the model forms from the turn | **Not live.** Switch off until AUT-556. | Same **up to 30 days** abuse-monitoring window as the OpenAI row. OpenAI lists `/v1/responses` Web Search as ZDR-eligible, but we do not have ZDR. ⚠️ Whether OpenAI passes the query to a third-party index is **not established**. | Published default plus our sharing toggles, same as above. | https://developers.openai.com/api/docs/guides/your-data ; https://developers.openai.com/api/docs/guides/tools-web-search (read 2026-09-18) |
+| **Google Search via Vertex AI** (Gemini, Grounding with Google Search, `googleSearch` tool, AUT-555) | The query plus any context sent with it | **Not live.** AUT-555 is blocked on Gemini 3 access (AUT-1003) and the switch stays off until AUT-556. | ⚠️ **Up to 3 days**, and it **cannot be disabled**. Verbatim: Google "collects and stores logs, which contains the following Customer Data: queries derived from End User prompts and contextual information that Customer may provide along with the prompts that are not associated with any Customer or its End Users for up to three (3) days, this stored information may be used for debugging of systems that support Grounding with Google Search. There is no way to disable the storage of this information if you use Grounding with Google Search." Web Grounding for Enterprise stores nothing, if ZDR is ever needed here. | "Google does not train on customer data processed by Grounding with Google Search." | https://docs.cloud.google.com/vertex-ai/generative-ai/docs/data-governance ; https://docs.cloud.google.com/vertex-ai/generative-ai/docs/grounding/web-grounding-enterprise (both read 2026-09-18; Service Specific Terms section 20) |
+
+⚠️ **The privacy policy says "Gemini models do not search yet."** That sentence goes stale the day
+`vertex_web_search_enabled` is turned on. Turning it on is therefore a policy edit first: drop
+"do not search yet" and "once we switch it on", re-date the policy, and only then flip the switch.
+Same rule for the xAI and OpenAI switches if this table's status column changes in any other way.
+
+⚠️ **The 3-day window is for Grounding with Google Search specifically.** If AUT-555 is ever built
+on Web Grounding for Enterprise (`enterpriseWebSearch`) instead, the row changes to "not stored"
+and the policy sentence must change with it. Google Maps grounding is a different product with a
+**30-day** window; do not let the two be confused.
+
+---
+
 ## A structural difference in the two OpenRouter rows
 
 Every other row in this table names one company that receives content under one policy. The
