@@ -23,7 +23,10 @@ It is written two ways, and they are the same fact in two formats:
 If those two ever describe different days, something is wrong. Do not "fix" it by picking one.
 Find out which change was published and which was not.
 
-**Current value: `2026-08-01`.**
+**Current value: `2026-09-18`** (AUT-1311: web search recipients, Starter retention). Only
+`privacy.html` changed that day, so it alone carries September 18. `terms.html` stays at
+August 21 and `cookies.html` at August 1, because the markers track the change, not the calendar.
+⚠️ If the privacy change is published on a later day, re-date it and use that day everywhere.
 
 ---
 
