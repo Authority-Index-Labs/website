@@ -82,7 +82,8 @@ Legend for "No-training basis":
 
 When a model looks something up mid-reply, **a search query derived from the user's message leaves
 the model provider for a search index.** That is a recipient in its own right, so it gets its own
-rows. Our stored memory is never sent as a search query; the model forms the query from the
+rows. Stored memory is not sent to a search index as such, but the query the model forms can reflect
+memory that is in its context. The model forms the query from the
 redacted prompt (AUT-658), so on Grok and GPT it may contain `[user]` but not the real name.
 
 Switch state on the day this was written, verified in `tessera-api` `origin/develop` `app/config.py`:
