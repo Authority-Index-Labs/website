@@ -23,13 +23,11 @@ It is written two ways, and they are the same fact in two formats:
 If those two ever describe different days, something is wrong. Do not "fix" it by picking one.
 Find out which change was published and which was not.
 
-**Current value: `2026-09-18`. PENDING: `2026-09-27`** (AUT-1500: de-identification before AI
-processing, P-AUT-54; microphone/contacts correction; Soniox for speech to text). Adam chose a
-new version on 2026-09-27, so users re-accept. Live only once `privacy.html` is published AND
-the markers move: tessera-api #512 (web reads the server), tessera-web #249 (fallback), tessera-app
-#451 (needs a build). Only `privacy.html` changed, so `terms.html` stays at August 21 and
-`cookies.html` at August 1. Material: say so, and the 30-day email notice is Adam's step.
-⚠️ If the privacy change is published on a later day, re-date it and use that day everywhere.
+**Current value: `2026-09-27`** (AUT-1500). Both `privacy.html` (de-identification before AI
+processing, microphone/contacts correction, Soniox) and `terms.html` (change notices are the
+in-app/web acceptance prompt, email only where the law requires it) changed that day and carry
+September 27; `cookies.html` stays at August 1. Server (tessera-api) and tessera-web are live
+at 2026-09-27; tessera-app is merged and reaches phones with the next build.
 
 ---
 
@@ -147,8 +145,10 @@ ask users to accept something they cannot read.
 
 ## C. Material changes, re-consent, and the 30-day notice
 
-Our own Terms, under "AGREEMENT TO OUR LEGAL TERMS", commit us to **at least 30 days' notice by
-email and re-acceptance for material changes.**
+Our own Terms, under "AGREEMENT TO OUR LEGAL TERMS" (as of 2026-09-27, Adam), notify users of
+a **material change by the acceptance prompt** shown in the app or on the web before they continue,
+and promise **email only where the law requires advance notice**. Separately, a **subscription
+price change** still carries 30 days' email notice (auto-renewal law), in the fees section.
 
 A change is material if it alters what someone agreed to, rather than describing more clearly
 what was already true. Use this test:
@@ -165,8 +165,8 @@ If it is material:
 
 * Say so in the ticket, explicitly.
 * Bump `LEGAL_VERSION`, which re-prompts mobile users on their next app launch after the release.
-* **Hand the email step to Adam.** Nothing in the codebase sends this. Do not assume it happened.
-* Remember the 30 days runs from the notice, not from the merge.
+* Email is needed only where the law requires advance notice (and for price changes). **Hand
+  that to Adam.** Nothing in the codebase sends it. Do not assume it happened.
 
 ---
 
