@@ -23,11 +23,12 @@ It is written two ways, and they are the same fact in two formats:
 If those two ever describe different days, something is wrong. Do not "fix" it by picking one.
 Find out which change was published and which was not.
 
-**Current value: `2026-08-21`. PENDING: `2026-09-18`** (AUT-1311: web search recipients,
-Starter retention). The new value is live only once `privacy.html` is published AND both clients
-are bumped (AUT-1322 web, AUT-1323 app); until then 2026-08-21 is what users have accepted. Only
-`privacy.html` changed that day, so it alone carries September 18. `terms.html` stays at
-August 21 and `cookies.html` at August 1, because the markers track the change, not the calendar.
+**Current value: `2026-09-18`. PENDING: `2026-09-27`** (AUT-1500: de-identification before AI
+processing, P-AUT-54; microphone/contacts correction; Soniox for speech to text). Adam chose a
+new version on 2026-09-27, so users re-accept. Live only once `privacy.html` is published AND
+the markers move: tessera-api #512 (web reads the server), tessera-web #249 (fallback), tessera-app
+#451 (needs a build). Only `privacy.html` changed, so `terms.html` stays at August 21 and
+`cookies.html` at August 1. Material: say so, and the 30-day email notice is Adam's step.
 ⚠️ If the privacy change is published on a later day, re-date it and use that day everywhere.
 
 ---
