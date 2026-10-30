@@ -29,6 +29,13 @@ in-app/web acceptance prompt, email only where the law requires it) changed that
 September 27; `cookies.html` stays at August 1. Server (tessera-api) and tessera-web are live
 at 2026-09-27; tessera-app is merged and reaches phones with the next build.
 
+**Pending (AUT-2065, PLAN2-D2, draft PR, not published):** `terms.html` and `privacy.html` carry
+a draft date of October 30, 2026 (top-ups, auto-reload, refund, referral 30%, 12-month retention for the
+new plans). The date must be reset to the real publication day and PLAN2-D4 must bump `LEGAL_VERSION` to
+the same day in tessera-api `app/legal.py`, tessera-app `src/lib/profile-api.ts` (plus `legal-content.ts`
+`LEGAL_EFFECTIVE_DATE`, `LegalGate`/`ReConsentGate`, `legal.test.tsx`, `sign-up.test.tsx`) and
+tessera-web `src/lib/legal/consent.ts` (plus `consent.test.ts`, `profile-api.test.ts`). `cookies.html` stays.
+
 ---
 
 ## A. Every location
